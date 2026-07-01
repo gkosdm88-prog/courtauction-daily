@@ -377,8 +377,8 @@ async def main():
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=True)
         page = await (await browser.new_context(locale="ko-KR")).new_page()
-        await page.goto(PAGE, wait_until="networkidle", timeout=60000)
-        await page.wait_for_timeout(1000)
+        await page.goto(PAGE, wait_until="domcontentloaded", timeout=60000)
+        await page.wait_for_timeout(3500)   # WebSquare 세션·쿠키 초기화 대기(CI 안정화)
 
         rows, total = await get_all_list(page)
         # 순수 토지 물건 제외 (건물/집합건물 없는 토지·임야·대·도로·전·답)
