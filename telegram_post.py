@@ -6,6 +6,7 @@ import json, os, urllib.request, urllib.parse, datetime, html as H
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 CFG = os.path.join(BASE, "telegram_config.json")
+REPORT_URL = "https://gkosdm88-prog.github.io/courtauction-daily/"  # Pages 링크(폰에서 열림)
 
 def cfg():
     d = {}
@@ -58,7 +59,8 @@ def build_text(iy, npl, today):
     if npl:
         ty = " · ".join(f"{H.escape(k)} {v}" for k, v in npl.get("types", {}).items()) or "유형 미상(마스킹)"
         p += ["━━━━━━━━━━━━━━", f"🔴 <b>NPL 부실채권 {npl['count']}건</b> (유동화·대부·자산관리)", ty, top_lines(npl)]
-    p.append("\n<i>법원경매 원천데이터 직수집 · 매일 자동</i>")
+    p.append(f'\n📱 <a href="{REPORT_URL}">전체 리포트 보기(검색·정렬)</a>')
+    p.append("<i>법원경매 원천데이터 직수집 · 매일 자동</i>")
     return "\n".join(p)
 
 def main():
