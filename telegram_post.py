@@ -75,7 +75,7 @@ def main():
         else:
             print("⚠ CHAT_ID 못 찾음 — 텔레그램에서 봇에게 아무 메시지나 한 번 보낸 뒤 다시 실행하세요.")
             return 2
-    iy, npl = load("summary_이용상태.json"), load("summary_NPL.json")
+    iy, npl = load("summary_use.json"), load("summary_npl.json")
     today = (datetime.datetime.utcnow() + datetime.timedelta(hours=9)).strftime("%Y-%m-%d (%a)")
     if not (iy or npl):
         print("요약 JSON 없음 — fetch.py 먼저 실행"); return 1

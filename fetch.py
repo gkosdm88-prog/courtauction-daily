@@ -368,7 +368,7 @@ document.querySelectorAll('thead th').forEach((th,i)=>{let asc=true;th.onclick=(
         "by_kw": dict(kwc.most_common()), "by_region": dict(sgg.most_common()),
         "avg_drate": avg_dr, "top": top, "file": os.path.basename(out),
     }
-    sjson = os.path.join(BASE, "summary_NPL.json" if NPL_ONLY else "summary_이용상태.json")
+    sjson = os.path.join(BASE, "summary_npl.json" if NPL_ONLY else "summary_use.json")
     with open(sjson, "w") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)
 
@@ -528,7 +528,7 @@ async def main():
         print(f"   감정 {won(r.get('gamevalAmt'))} / 최저 {won(r.get('minmaePrice'))} / 유찰 {r.get('yuchalCnt')}회 / 기일 {r.get('maeGiil')} · [{h['via']}] {h['evi'][:50]}")
 
     # ── 판매급 반응형 HTML 리포트 ──
-    out = os.path.join(BASE, "results_NPL_상가.html" if NPL_ONLY else "results_상가_이용상태.html")
+    out = os.path.join(BASE, "results_npl.html" if NPL_ONLY else "results_use.html")
     write_report(out, recs, npl_cnt, type_cnt, kwc, sgg)
     print(f"\nHTML 저장: {out}", flush=True)
     if os.environ.get("NO_OPEN", "") != "1":
