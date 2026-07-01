@@ -1,0 +1,32 @@
+name: 경매 상가 일일보고
+
+on:
+  schedule:
+    - cron: '0 23 * * *'   # 08:00 KST = 23:00 UTC
+  workflow_dispatch:        # 수동 실행(테스트)용
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Playwright + Chromium 설치
+        run: |
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: 리포트 생성 + 텔레그램 발송
+        env:
+          NO_OPEN: '1'
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: |
+          python fetch.py
+          NPL_ONLY=1 python fetch.py
+          python telegram_post.py

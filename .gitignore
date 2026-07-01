@@ -1,0 +1,5 @@
+telegram_config.json
+slack_config.json
+*.log
+daily.log
+launchd.*.log
