@@ -3,6 +3,7 @@
 - 캡처한 실제 검색조건(captured/63)을 그대로 사용 (경기도 / 건물>상업용및업무용>근린생활시설)
 """
 import asyncio, json, os, re, sys, html
+from datetime import datetime, timedelta
 from playwright.async_api import async_playwright
 
 # Windows 콘솔(cp949)에서도 한글/특수문자 print 안전
@@ -76,6 +77,10 @@ YONGDO = {  # 별칭 → scl코드
 def envf(k, d=""): return os.environ.get(k, d).strip()
 _scl = envf("YONGDO")
 SCL = YONGDO.get(_scl, _scl) if _scl else None   # None=캡처값 유지
+# 매각기일 기간: 지정 없으면 오늘~오늘+AUCTION_DAYS일 자동 롤링(기본 21일)
+AUCTION_DAYS = int(envf("AUCTION_DAYS") or "21")
+_bid_from = envf("BID_FROM") or datetime.now().strftime("%Y%m%d")
+_bid_to = envf("BID_TO") or (datetime.now() + timedelta(days=AUCTION_DAYS)).strftime("%Y%m%d")
 FILT = {
     "sclDspslGdsLstUsgCd": SCL,
     "rprsAdongSdCd": envf("SIDO") or None,        # 시도코드 (41경기 11서울 등)
@@ -84,7 +89,7 @@ FILT = {
     "aeeEvlAmtMin": envf("AMT_MIN") or None, "aeeEvlAmtMax": envf("AMT_MAX") or None,     # 감정가(원)
     "rletLwsDspslPrcMin": envf("LOW_MIN") or None, "rletLwsDspslPrcMax": envf("LOW_MAX") or None,  # 최저가(원)
     "flbdNcntMin": envf("FLBD_MIN") or None, "flbdNcntMax": envf("FLBD_MAX") or None,     # 유찰횟수
-    "bidBgngYmd": envf("BID_FROM") or None, "bidEndYmd": envf("BID_TO") or None,          # 매각기일 YYYYMMDD
+    "bidBgngYmd": _bid_from, "bidEndYmd": _bid_to,                                        # 매각기일 YYYYMMDD (자동 롤링)
 }
 def build_search_template():
     tpl = json.loads(base_payload["postData"])
@@ -226,7 +231,8 @@ def write_report(out, recs, npl_cnt, type_cnt, kwc, sgg):
     subtitle = "채권 승계(유동화·대부·자산관리) 물건" if NPL_ONLY else "이용상태 매칭 · 투자분석 대시보드"
     period = ""
     try:
-        bf = BASE_SRCH.get("bidBgngYmd") or ""; bt = BASE_SRCH.get("bidEndYmd") or ""
+        _si = SEARCH_TEMPLATE.get("dma_srchGdsDtlSrchInfo", {})
+        bf = _si.get("bidBgngYmd") or ""; bt = _si.get("bidEndYmd") or ""
         if len(bf) == 8 and len(bt) == 8:
             period = f"{bf[:4]}.{bf[4:6]}.{bf[6:]}~{bt[4:6]}.{bt[6:]}"
     except Exception: pass

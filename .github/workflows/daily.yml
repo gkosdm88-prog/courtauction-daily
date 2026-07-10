@@ -1,0 +1,58 @@
+name: Daily Crawl & Deploy
+
+on:
+  schedule:
+    - cron: '0 22 * * *'      # 매일 07:00 KST (22:00 UTC 전날)
+  workflow_dispatch:            # 수동 실행 버튼
+
+permissions:
+  contents: write              # 결과 커밋/푸시
+  pages: write                 # Pages 배포
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  crawl-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install deps
+        run: |
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Crawl (오늘~+21일 매각기일)
+        env:
+          NO_OPEN: '1'
+          AUCTION_DAYS: '21'
+        run: python fetch.py
+
+      - name: Commit refreshed data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results_use.html summary_use.json captured/detail_cache.json captured/creditor_cache.json || true
+          if git diff --staged --quiet; then
+            echo "변경 없음 — 커밋 건너뜀"
+          else
+            git commit -m "일일 자동 갱신 $(date -u +%Y-%m-%d)"
+            git push
+          fi
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      - id: deployment
+        uses: actions/deploy-pages@v4
